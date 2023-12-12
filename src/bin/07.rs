@@ -15,7 +15,7 @@ enum HandType {
 
 type CardValue = u8;
 
-#[derive(Eq, PartialOrd, PartialEq)]
+#[derive(Eq, PartialEq)]
 struct Hand {
     cards: [CardValue; 5],
 }
@@ -28,13 +28,13 @@ impl HandTrait for Hand {
         let mut cards = self.cards;
         cards.sort_unstable();
 
-        let jokers = cards.partition_point(|x| *x == 1);
-        let mut groups = cards[jokers..].into_iter().group_by(|x| *x).into_iter()
+        let jokers = cards.partition_point(|x: &u8| *x == 1);
+        let mut groups = cards[jokers..].iter().group_by(|x| *x).into_iter()
             .map(|(_, g)| g.count()).collect::<Vec<usize>>();
         groups.sort_unstable();
         groups.reverse();
 
-        match (groups.get(0).map_or(jokers, |x| x + jokers), groups.get(1)) {
+        match (groups.first().map_or(jokers, |x| x + jokers), groups.get(1)) {
             (3, Some(2)) => HandType::FullHouse,
             (2, Some(2)) => HandType::DoublePair,
             (5, _) => HandType::FiveOfKind,
@@ -46,6 +46,12 @@ impl HandTrait for Hand {
     }
 }
 
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, other: &Hand) -> Option<std::cmp::Ordering> {
+       Some(self.cmp(other))
+    }
+}
+
 impl Ord for Hand {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         (self.hand_type(), self.cards).cmp(&(other.hand_type(), other.cards))
@@ -54,7 +60,7 @@ impl Ord for Hand {
 
 fn parse(input: &str, j_as_joker: bool) -> Vec<(Hand, u32)> {
     input.lines().map(|l| {
-        (Hand { 
+        (Hand {
             cards: l.chars().take(5).map(|x| match x {
                         'A' => 14,
                         'K' => 13,

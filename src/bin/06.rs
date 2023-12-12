@@ -15,8 +15,8 @@ fn find_solution(t: u64, d: u64) -> u64 {
 
     let s = ((t*t - 4 * d) as f64).sqrt();
 
-    let a = (((t as f64 - s) / 2.)).floor() as u64 + 1;
-    let b = (((t as f64 + s) / 2.)).ceil() as u64 - 1;
+    let a = ((t as f64 - s) / 2.).floor() as u64 + 1;
+    let b = ((t as f64 + s) / 2.).ceil() as u64 - 1;
     // println!("t {:?}; d {:?}; a {:?}; b {:?}; ways {:?}", t, d, a, b, b-a+1);
     b - a + 1
 }

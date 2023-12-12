@@ -83,7 +83,9 @@ fn parse(input: &str) -> Input {
     let mut map = None;
     for line in body {
         if let Some((_from, _to)) = parse_header(line) {
-            map.replace(Map{ _from, _to, ranges: vec![]}).map(|m| maps.push(m));
+            if let Some(m) = map.replace(Map{ _from, _to, ranges: vec![]}) {
+                maps.push(m);
+            }
         }
         else if let Some(range) = parse_mapping(line) {
             if let Some(m) = &mut map {
@@ -94,7 +96,9 @@ fn parse(input: &str) -> Input {
             }
         }
     }
-    map.take().map(|m| maps.push(m));
+    if let Some(m) = map.take() {
+        maps.push(m);
+    }
 
     (seeds, maps)
 }
@@ -117,7 +121,9 @@ pub fn part_two(input: &str) -> Option<usize> {
             let mut to_be_processed = Vec::<Range>::new();
             for x in unprocessed {
                 let (mut u, p) = range.convert_range(&x);
-                p.map(|converted| processed.push(converted));
+                if let Some(converted) = p {
+                    processed.push(converted);
+                }
                 to_be_processed.append(&mut u)
             }
             to_be_processed

@@ -10,10 +10,10 @@ struct Card {
 
 fn parse(input: &str) -> Vec<Card> {
     input.lines().map(|line| {
-        let parts = line.split(":").collect::<Vec<_>>();
+        let parts = line.split(':').collect::<Vec<_>>();
         let id = parts[0].strip_prefix("Card").unwrap().trim().parse::<u32>().unwrap();
 
-        let number_parts = parts[1].split("|").collect::<Vec<_>>();
+        let number_parts = parts[1].split('|').collect::<Vec<_>>();
 
         let winning = number_parts[0].split_ascii_whitespace().map(|x| x.parse::<u32>().unwrap() ).collect::<Vec<_>>();
         let numbers = number_parts[1].split_ascii_whitespace().map(|x| x.parse::<u32>().unwrap() ).collect::<Vec<_>>();
