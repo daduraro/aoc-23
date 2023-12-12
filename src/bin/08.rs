@@ -60,19 +60,15 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<u64> {
     let (dirs, net) = parse(input);
 
-    // println!("net: {:?}", net);
-
-    let curr = net.iter().enumerate().filter_map(|(idx, Node{name, ..})| {
-        // println!("name: {:?}; ends_with: {:?}", name, name.ends_with("A"));
-        name.ends_with("A").then(|| idx)
-    }).collect::<Vec<_>>();
-    // println!("curr: {:?}", curr);
+    let curr = net.iter().enumerate().filter(|(_, Node{name, ..})| {
+        name.ends_with('A')
+    }).map(|(idx, _)| idx).collect::<Vec<_>>();
 
     // assume for now that LCM works...
     let res = curr.iter().map(|c| {
         let mut x = *c;
         let mut n = 0u64;
-        while !net[x].name.ends_with("Z") {
+        while !net[x].name.ends_with('Z') {
             x = match dirs[(n as usize) % dirs.len()] {
                 Direction::Left => net[x].left,
                 Direction::Right => net[x].right,
@@ -80,7 +76,7 @@ pub fn part_two(input: &str) -> Option<u64> {
             n += 1;
         }
         n
-    }).fold(1, |acc, x| num::integer::lcm(acc, x));
+    }).fold(1, num::integer::lcm);
     Some(res)
 }
 
