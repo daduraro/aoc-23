@@ -55,6 +55,38 @@ fn advance((i, j): (isize, isize), d: Direction, t: isize) -> (isize, isize) {
     }
 }
 
+#[allow(dead_code)]
+fn solve_count_parity(input: &[(Direction, isize)]) -> usize {
+    let mut loop_coords = std::collections::HashSet::new();
+    let mut curr = (0, 0);
+    for (dir, times) in input {
+        for _ in 0..*times {
+            curr = advance(curr, *dir, 1);
+            loop_coords.insert(curr);
+        }
+    }
+
+    let min_coords = loop_coords.iter().fold((isize::MAX, isize::MAX), |acc, (i, j)|{ (acc.0.min(*i), acc.1.min(*j)) });
+    let max_coords = loop_coords.iter().fold((isize::MIN, isize::MIN), |acc, (i, j)|{ (acc.0.max(*i), acc.1.max(*j)) });
+
+    let mut result = 0;
+    for i in min_coords.0..(max_coords.0+1) {
+        let mut inters = 0;
+        for j in min_coords.1..(max_coords.1+1) {
+            if loop_coords.contains(&(i,j)) {
+                result += 1;
+                if loop_coords.contains(&(i-1, j)) { // only count vertical intersections towards north
+                    inters += 1;
+                }
+            }
+            else if inters % 2 == 1 { // inside
+                result += 1;
+            }
+        }
+    }
+    result
+}
+
 fn sum_ranges(ranges: &[(isize, isize)]) -> usize {
     ranges.iter().map(|(a, b)|{
         assert!(b >= a);
@@ -127,40 +159,7 @@ fn merge(inside: &mut Vec<(isize, isize)>, (a, b): &(isize, isize)) -> usize {
 }
 
 #[allow(dead_code)]
-fn solve_slow(input: &[(Direction, isize)]) -> usize {
-    let mut loop_coords = std::collections::HashSet::new();
-    let mut curr = (0, 0);
-    for (dir, times) in input {
-        for _ in 0..*times {
-            curr = advance(curr, *dir, 1);
-            loop_coords.insert(curr);
-        }
-    }
-
-    let min_coords = loop_coords.iter().fold((isize::MAX, isize::MAX), |acc, (i, j)|{ (acc.0.min(*i), acc.1.min(*j)) });
-    let max_coords = loop_coords.iter().fold((isize::MIN, isize::MIN), |acc, (i, j)|{ (acc.0.max(*i), acc.1.max(*j)) });
-
-    let mut result = 0;
-    for i in min_coords.0..(max_coords.0+1) {
-        let mut inters = 0;
-        for j in min_coords.1..(max_coords.1+1) {
-            if loop_coords.contains(&(i,j)) {
-                result += 1;
-                if loop_coords.contains(&(i-1, j)) {
-                    inters += 1;
-                }
-            }
-            else if inters % 2 == 1 { // inside
-                result += 1;
-            }
-        }
-
-        println!("{}: {}", i, result);
-    }
-    result
-}
-
-fn solve(input: &[(Direction, isize)]) -> usize {
+fn solve_sweepline(input: &[(Direction, isize)]) -> usize {
     let mut edges = Vec::new();
     let mut curr = (0,0);
     for (dir, t) in input {
@@ -198,14 +197,44 @@ fn solve(input: &[(Direction, isize)]) -> usize {
     result
 }
 
+#[allow(dead_code)]
+fn solve_area(input: &[(Direction, isize)]) -> usize {
+    // Imagine the polygon at integer coordinates:
+    // +--+
+    // |..|
+    // |..|
+    // +--+
+    // this has an area of 3x3=9, 4 interior nodes and 12 boundary nodes.
+    // The area (a) can be easily computed by summing up
+    // the area of the triangles wrt origin of coordinates,
+    // and the interior points with Pick's theorem of
+    //  a = interior + boundary/2 - 1 => interior = a - boundary/2 + 1
+    // so that interior = 9 - 12/2 + 1 = 4.
+    // If we "inflate" each node so that it occupies a whole square,
+    // then the total area (A) is interior + boundary, and so it follows
+    // that A = interior + boundary = (a - boundary/2 + 1) + boundary
+    // i.e. A = a + boundary/2 + 1
+    let mut boundary = 0;
+    let mut area = 0;
+    let mut prev = (0,0);
+    for (d, t) in input {
+        let curr = advance(prev, *d, *t);
+        boundary += *t as usize;
+        area += prev.0*curr.1 - curr.0*prev.1;
+        prev = curr;
+    }
+    area /= 2;
+    boundary / 2 + area.unsigned_abs() + 1
+}
+
 pub fn part_one(input: &str) -> Option<usize> {
     let input = parse(input);
-    Some(solve(&input.0))
+    Some(solve_area(&input.0))
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
     let input = parse(input);
-    Some(solve(&input.1))
+    Some(solve_area(&input.1))
 }
 
 #[cfg(test)]
