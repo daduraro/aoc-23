@@ -212,8 +212,9 @@ fn solve_area(input: &[(Direction, isize)]) -> usize {
     // so that interior = 9 - 12/2 + 1 = 4.
     // If we "inflate" each node so that it occupies a whole square,
     // then the total area (A) is interior + boundary, and so it follows
-    // that A = interior + boundary = (a - boundary/2 + 1) + boundary
-    // i.e. A = a + boundary/2 + 1
+    // that A = interior + boundary 
+    //        = (a - boundary/2 + 1) + boundary 
+    //        =  a + boundary/2 + 1
     let mut boundary = 0;
     let mut area = 0;
     let mut prev = (0,0);
