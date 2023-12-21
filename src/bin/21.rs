@@ -94,41 +94,76 @@ fn part_one_impl(input: &str, steps: usize) -> Option<u32> {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-fn bfs_distance_modular(start: &[i32; 2], grid: &Grid, step: usize) -> Array2<u32> {
-    let n = step * 2 + 1;
-    let mut distance = ndarray::Array::from_elem((n, n), u32::MAX);
+// fn bfs_distance_modular(start: &[i32; 2], grid: &Grid, step: usize) -> Array2<u32> {
+//     let n = step * 2 + 1;
+//     let mut distance = ndarray::Array::from_elem((n, n), u32::MAX);
     
-    // start is at the center of distance, distance grid has an offset wrt to grid (0,0)
-    let offset = [start[0] - step as i32, start[1] - step as i32];
+//     // start is at the center of distance, distance grid has an offset wrt to grid (0,0)
+//     let offset = [start[0] - step as i32, start[1] - step as i32];
+
+//     let mut queue = VecDeque::new();
+//     queue.push_front(([step as i32, step as i32], 0));
+
+//     while let Some(([i, j], d)) = queue.pop_front() {
+//         let out_of_bounds = i < 0 || j < 0 || i as usize >= n || j as usize >= n;
+//         let idx = [i as usize, j as usize];
+//         let grid_idx = [(i + offset[0]).mod_floor(&(grid.nrows() as i32)) as usize, (j + offset[1]).mod_floor(&(grid.ncols() as i32)) as usize];
+//         if out_of_bounds || distance[idx] <= d || grid[grid_idx] == Node::Blocked {
+//             continue;
+//         }
+
+//         distance[idx] = d;
+//         queue.push_back(([i+1, j], d+1));
+//         queue.push_back(([i-1, j], d+1));
+//         queue.push_back(([i, j+1], d+1));
+//         queue.push_back(([i, j-1], d+1));
+//     }
+
+//     distance
+// }
+
+// fn count_modular_2(start: &[i32; 2], grid: &Grid, steps: usize) -> usize {
+//     let distance = bfs_distance_modular(start, grid, steps); // start is centered at [step, step]
+//     let parity = steps % 2;
+
+//     distance.indexed_iter().filter(|(p, d)| {
+//         **d <= steps as u32 && (p.0.abs_diff(steps) + p.1.abs_diff(steps)) % 2 == parity
+//     }).count()
+// }
+
+fn count_modular(start: &[i32; 2], grid: &Grid, steps: usize) -> usize {
+    let parity = steps % 2;
 
     let mut queue = VecDeque::new();
-    queue.push_front(([step as i32, step as i32], 0));
+    queue.push_front((*start, 0));
 
+    let mut processed = std::collections::HashSet::new();
+
+    let mut result = 0;
     while let Some(([i, j], d)) = queue.pop_front() {
-        let out_of_bounds = i < 0 || j < 0 || i as usize >= n || j as usize >= n;
-        let idx = [i as usize, j as usize];
-        let grid_idx = [(i + offset[0]).mod_floor(&(grid.nrows() as i32)) as usize, (j + offset[1]).mod_floor(&(grid.ncols() as i32)) as usize];
-        if out_of_bounds || distance[idx] <= d || grid[grid_idx] == Node::Blocked {
+
+        if processed.contains(&[i, j]) { continue; }
+        processed.insert([i, j]);
+        
+        let grid_idx = [
+            i.mod_floor(&(grid.nrows() as i32)) as usize, 
+            j.mod_floor(&(grid.ncols() as i32)) as usize
+        ];
+        if d > steps || grid[grid_idx] == Node::Blocked {
             continue;
         }
+        let diff = (i.abs_diff(start[0]) + j.abs_diff(start[1])) as usize;
+        if (diff % 2) == parity {
+            result += 1;
+        }
 
-        distance[idx] = d;
         queue.push_back(([i+1, j], d+1));
         queue.push_back(([i-1, j], d+1));
         queue.push_back(([i, j+1], d+1));
         queue.push_back(([i, j-1], d+1));
     }
 
-    distance
-}
-
-fn count_modular(start: &[i32; 2], grid: &Grid, steps: usize) -> usize {
-    let distance = bfs_distance_modular(start, grid, steps); // start is centered at [step, step]
-    let parity = steps % 2;
-
-    distance.indexed_iter().filter(|(p, d)| {
-        **d <= steps as u32 && (p.0.abs_diff(steps) + p.1.abs_diff(steps)) % 2 == parity
-    }).count()
+    result
 }
 
 #[allow(dead_code)]
