@@ -122,7 +122,7 @@ pub fn part_two(input: &str) -> Option<i64> {
     let z = decomp.solve(&b).unwrap();
     let (z, _w) = (z[0], z[1]);
 
-    println!("{}, {}, {} @ {}, {}, {}", x, y, z, u, _v, _w);
+    // println!("{}, {}, {} @ {}, {}, {}", x, y, z, u, _v, _w);
 
     Some((x+y+z).round() as i64)
 }
